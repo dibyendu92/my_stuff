@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 # 47 - 54      Real(8.3)     z            Orthogonal coordinates for Z in Angstroms.
 # --------------------------------------------------------------------------------------
 
-def calc_COM(atom_dic):
+def calc_mol_COM(atom_dic):
     mass_dic = {"N":14.0, "O": 16.0, "S": 32.0, "H": 1.0, "C": 12.0}
     COM_x = 0.0
     COM_y = 0.0
@@ -43,19 +43,19 @@ def calc_COM(atom_dic):
 def find_dist(pdb_file1, pdb_file2):
     atom1 = {}
     atom2 = {}
-    res_name = ["GLY", "ALA", "VAL", "LEU", "ILE", "PRO", "LYS", "HIS", "PHE", "TYR", "TRP", "ASN", "GLN", "SER", "THR", "ARG", "ASP", "GLU", "CYS", "MET", "CYI", "HIP"]
+    res_name = ["GLY", "ALA", "VAL", "LEU", "ILE", "PRO", "LYS", "HIS", "HIE", "PHE", "TYR", "TRP", "ASN", "GLN", "SER", "THR", "ARG", "ASP", "GLU", "CYS", "MET", "CYI", "HIP"]
     with open(pdb_file1, "r") as input_file1:
          for line in input_file1:
              if line[0:6] == "ATOM  ":
                 atom1[line[6:11]] = [line[12:16],line[17:20], line[22:26], float(line[30:38].strip()), float(line[38:46].strip()), float(line[46:54].strip())]
 #               atom[Atom serial number] = [Atom name,Residue name, Residue seq number, Coord X, Coord Y, Coord Z] 
-    (COM_X1, COM_Y1, COM_Z1) = calc_COM(atom1) 
+    print calc_mol_COM(atom1) 
     with open(pdb_file2, "r") as input_file2:
          for line in input_file2:
              if line[0:6] == "ATOM  ":
                 atom2[line[6:11]] = [line[12:16],line[17:20], line[22:26], float(line[30:38].strip()), float(line[38:46].strip()), float(line[46:54].strip())]
 #               atom[Atom serial number] = [Atom name,Residue name, Residue seq number, Coord X, Coord Y, Coord Z]
-    (COM_X2, COM_Y2, COM_Z2) = calc_COM(atom2) 
+#    (COM_X2, COM_Y2, COM_Z2) = calc_mol_COM(atom2) 
     if len(atom1) == len(atom2):
          res_dist_list = {}
          total_dist2 = 0.0
@@ -71,6 +71,11 @@ def find_dist(pdb_file1, pdb_file2):
                      res_dist_list[atom1[keys][2].strip()] = [dist*dist]
                   else:
                      res_dist_list[atom1[keys][2].strip()].append(dist*dist)
+               else:
+                 print "rsmd can only meant to be calculated one the protein residues (amino acids), no for", atom1[keys][1]
+            else:
+              print "residue numbering or atom id or residue name should be exact for residue to residue rmsd calculation"
+              sys.exit()
          rmsd_res = {}
          for key in res_dist_list:
              rmsd_res[key] = 0.0
@@ -87,7 +92,10 @@ def find_dist(pdb_file1, pdb_file2):
              plt.bar(x,y)
              plt.show()
          else:     
-             print(np.sqrt(total_dist2/len(atom1)))     
+             print(np.sqrt(total_dist2/len(atom1)))
+    else:
+      print "PDBs are not same, this code needs exactly same number of atoms for the rmsd calculation" 
+      sys.exit()    
     return None
           
 pdb_file1 = sys.argv[1]
